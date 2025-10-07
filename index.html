@@ -1154,14 +1154,16 @@
             
             // URL 2: Último período (simples)
             const url2 = generateURL(baseURL, varcd, 'last_period', lang);
+            const lastPeriodCode = getPeriodCode(selectedIndicator.UltimoPeriodo);
+            const lastPeriodDesc = lastPeriodCode ? `código: ${lastPeriodCode}` : 'todos os períodos disponíveis';
             addURLOutput(urlsOutput, '2. Último período disponível', url2, 'bi-calendar-event',
-                `Estratégia conservadora: apenas o último período (${selectedIndicator.UltimoPeriodo}) sem outras dimensões.`);
+                `Estratégia conservadora: apenas o último período (${selectedIndicator.UltimoPeriodo} - ${lastPeriodDesc}) sem outras dimensões.`);
             
             // URL 3: Períodos específicos
             const url3 = generateURL(baseURL, varcd, 'specific_periods', lang);
             const allPeriodCodes = getAllPeriodCodes();
             addURLOutput(urlsOutput, '3. Períodos específicos', url3, 'bi-calendar-range',
-                `Estratégia temporal: todos os períodos disponíveis (${allPeriodCodes.join(',')}) sem dimensões geográficas.`);
+                `Estratégia temporal: todos os períodos disponíveis (${allPeriodCodes.length} códigos: ${allPeriodCodes.slice(0, 5).join(', ')}${allPeriodCodes.length > 5 ? '...' : ''}) sem dimensões geográficas.`);
             
             // URL 4: Por nível geográfico
             const url4 = generateURL(baseURL, varcd, 'geographic_level', lang);
@@ -1202,7 +1204,13 @@
                     if (lastPeriodCode) {
                         url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${lastPeriodCode}&lang=${lang}`;
                     } else {
-                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
+                        // Se não encontrar o código específico, usar todos os períodos disponíveis
+                        const allPeriodCodes = getAllPeriodCodes();
+                        if (allPeriodCodes.length > 0) {
+                            url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${allPeriodCodes.join(',')}&lang=${lang}`;
+                        } else {
+                            url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
+                        }
                     }
                     break;
                     
@@ -1309,25 +1317,28 @@
             return url;
         }
         
-        function getPeriodCode(year) {
+        function getPeriodCode(periodDescription) {
             // Extrai o código do período do JSON de metadados
-            // Procura na estrutura Categoria_Dim por Dim_Num1_S7A{year}
+            // Procura na estrutura Categoria_Dim por códigos que correspondam ao período
             if (!selectedIndicator.Dimensoes || !selectedIndicator.Dimensoes.Categoria_Dim) {
-                return `S7A${year}`; // fallback
+                return null; // sem fallback
             }
-            
-            const categoryKey = `Dim_Num1_S7A${year}`;
             
             // Categoria_Dim é um array de objetos
-            const categoryObj = selectedIndicator.Dimensoes.Categoria_Dim.find(cat => 
-                Object.keys(cat).includes(categoryKey)
-            );
-            
-            if (categoryObj && categoryObj[categoryKey] && categoryObj[categoryKey][0]) {
-                return categoryObj[categoryKey][0].categ_cod;
+            for (const categoryObj of selectedIndicator.Dimensoes.Categoria_Dim) {
+                Object.keys(categoryObj).forEach(key => {
+                    // Procurar por chaves que começam com Dim_Num1_ (primeira dimensão - período)
+                    if (key.startsWith('Dim_Num1_') && categoryObj[key] && categoryObj[key][0]) {
+                        const categoryData = categoryObj[key][0];
+                        // Verificar se a descrição corresponde ao período procurado
+                        if (categoryData.categ_dsg && categoryData.categ_dsg.includes(periodDescription)) {
+                            return categoryData.categ_cod;
+                        }
+                    }
+                });
             }
             
-            return `S7A${year}`; // fallback se não encontrar
+            return null; // não encontrou
         }
         
         function getAllPeriodCodes() {
@@ -1341,13 +1352,19 @@
             // Categoria_Dim é um array de objetos
             selectedIndicator.Dimensoes.Categoria_Dim.forEach(categoryObj => {
                 Object.keys(categoryObj).forEach(key => {
-                    if (key.startsWith('Dim_Num1_S7A') && categoryObj[key] && categoryObj[key][0]) {
+                    // Procurar por chaves que começam com Dim_Num1_ (primeira dimensão - período)
+                    if (key.startsWith('Dim_Num1_') && categoryObj[key] && categoryObj[key][0]) {
                         const code = categoryObj[key][0].categ_cod;
-                        periodCodes.push(code);
+                        const description = categoryObj[key][0].categ_dsg;
+                        if (code && !periodCodes.includes(code)) {
+                            periodCodes.push(code);
+                            console.log(`Período encontrado: ${code} - ${description}`);
+                        }
                     }
                 });
             });
             
+            console.log(`Total de códigos de período extraídos: ${periodCodes.length}`, periodCodes);
             return periodCodes.sort();
         }
         
