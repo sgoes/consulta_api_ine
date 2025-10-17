@@ -212,7 +212,7 @@
             text-decoration: underline;
         }
         
-        .copy-btn, .test-btn {
+        .copy-btn, .test-btn, .preview-btn {
             background-color: var(--light-color);
             border: 1px solid var(--border-color);
             color: var(--dark-color);
@@ -232,6 +232,97 @@
             background-color: var(--info-color);
             color: var(--white);
             transform: translateY(-1px);
+        }
+        
+        .preview-btn:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+        
+        .json-preview {
+            background: #282c34;
+            color: #abb2bf;
+            border-radius: 0 0 8px 8px;
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            border: 2px solid var(--border-color);
+            border-top: none;
+            position: relative;
+        }
+        
+        .json-preview::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .json-preview::-webkit-scrollbar-track {
+            background: #1e2127;
+            border-radius: 0 0 8px 0;
+        }
+        
+        .json-preview::-webkit-scrollbar-thumb {
+            background: #4b5263;
+            border-radius: 4px;
+        }
+        
+        .json-preview::-webkit-scrollbar-thumb:hover {
+            background: #5c6370;
+        }
+        
+        .json-preview pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .json-preview .json-key {
+            color: #e06c75;
+        }
+        
+        .json-preview .json-string {
+            color: #98c379;
+        }
+        
+        .json-preview .json-number {
+            color: #d19a66;
+        }
+        
+        .json-preview .json-boolean {
+            color: #56b6c2;
+        }
+        
+        .json-preview .json-null {
+            color: #c678dd;
+        }
+        
+        .json-preview-header {
+            background: var(--dark-color);
+            color: var(--white);
+            padding: 0.75rem 1rem;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .json-preview-loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-color);
+        }
+        
+        .json-preview-error {
+            background: rgba(220, 53, 69, 0.1);
+            border: 2px solid var(--danger-color);
+            color: var(--danger-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
         }
         
         .status-alert {
@@ -399,8 +490,9 @@
                                     <li class="mb-2"><strong>Selecione o indicador</strong> desejado da lista</li>
                                     <li class="mb-2"><strong>Análise automática:</strong> O sistema identifica todas as dimensões disponíveis</li>
                                     <li class="mb-2"><strong>Configure as dimensões</strong> usando apenas as opções realmente disponíveis</li>
-                                    <li class="mb-2"><strong>Gere os URLs</strong> baseados nas dimensões identificadas</li>
-                                    <li class="mb-0"><strong>Copie e abra</strong> os URLs gerados para visualizar o JSON</li>
+                                    <li class="mb-2"><strong>Gere os URLs:</strong> Use "Gerar URLs" para múltiplas estratégias ou "Gerar URL Nível Nacional" para dados agregados</li>
+                                    <li class="mb-2"><strong>Pré-visualize o JSON:</strong> Use o botão "Pré-visualizar" para carregar e ver os dados diretamente na página</li>
+                                    <li class="mb-0"><strong>Copie, descarregue ou abra</strong> os URLs e dados gerados conforme necessário</li>
                                 </ol>
                                 
                                 <div class="alert alert-warning border-0 mb-0">
@@ -413,11 +505,13 @@
                                         <li><strong>Dimensões dinâmicas:</strong> Cada indicador tem dimensões específicas e únicas</li>
                                         <li><strong>Dropdowns inteligentes:</strong> Só mostra opções realmente disponíveis no JSON</li>
                                         <li><strong>Caixa de pesquisa:</strong> Digite para filtrar valores rapidamente em cada dimensão</li>
-                                        <li><strong>Dim2=T pode não funcionar:</strong> Nem todos os indicadores suportam "T" para dimensões geográficas</li>
-                                        <li><strong>Use códigos específicos:</strong> Selecione valores específicos no dropdown para evitar erros</li>
-                                        <li><strong>Endpoints diferentes:</strong> pindica.jsp para dados, pindicaNoLevel.jsp para níveis</li>
+                                        <li><strong>Apenas Dim1 aceita "T":</strong> Apenas a dimensão de período (Dim1) aceita o valor "T" para todos. Outras dimensões devem usar valores específicos</li>
+                                        <li><strong>Use códigos específicos:</strong> Para Dim2, Dim3, etc., sempre selecione valores específicos no dropdown</li>
+                                        <li><strong>Endpoints diferentes:</strong> pindica.jsp para dados, pindicaNoLevel.jsp para níveis geográficos</li>
                                         <li><strong>Termina sempre com &lang=PT:</strong> Todos os URLs gerados terminam com este parâmetro</li>
-                                        <li><strong>Teste primeiro:</strong> Use o botão "Abrir" para visualizar o JSON numa nova aba</li>
+                                        <li><strong>Botão "Nível Nacional":</strong> Gera automaticamente URL com todas as dimensões em lvl@1 usando pindicaNoLevel.jsp</li>
+                                        <li><strong>Pré-visualização com proxy:</strong> Tenta carregar JSON usando proxies CORS, mas pode falhar devido a restrições de segurança</li>
+                                        <li><strong>Alternativa: Nova aba:</strong> Se a pré-visualização falhar, use "Abrir numa Nova Aba" para ver o JSON diretamente na API</li>
                                         <li><strong>Metadados seguros:</strong> O URL de metadados (indicaMeta.jsp) sempre funciona</li>
                                     </ul>
                                 </div>
@@ -540,6 +634,10 @@
                                     <button class="btn btn-success" onclick="generateURLs()">
                                         <i class="bi bi-magic me-2"></i>
                                         Gerar URLs
+                                    </button>
+                                    <button class="btn btn-primary" onclick="generateLevelURL()">
+                                        <i class="bi bi-globe me-2"></i>
+                                        Gerar URL Nível Nacional
                                     </button>
                                     <button class="btn btn-warning" onclick="clearAll()">
                                         <i class="bi bi-arrow-clockwise me-2"></i>
@@ -1131,6 +1229,29 @@
             levelDiv.style.display = typeSelect.value === 'level' ? 'block' : 'none';
         }
         
+        function generateLevelURL() {
+            if (!selectedIndicator) {
+                showStatus('Por favor, selecione um indicador primeiro', 'error');
+                return;
+            }
+            
+            showStatus('A gerar URL nível nacional...', 'loading');
+            
+            const urlsOutput = document.getElementById('urlsOutput');
+            const baseURL = 'https://www.ine.pt/ine/json_indicador/';
+            const varcd = selectedIndicator.IndicadorCod;
+            const lang = 'PT';
+            
+            // Gerar URL específico para nível nacional
+            const levelURL = generateURL(baseURL, varcd, 'all_level1', lang);
+            
+            // Adicionar apenas este URL à lista
+            addURLOutput(urlsOutput, '🌍 URL Nível Nacional (Todas as Dimensões)', levelURL, 'bi-globe',
+                'Estratégia nacional completa: todas as dimensões em nível 1 usando pindicaNoLevel.jsp com op=2. Ideal para dados agregados por país com todas as dimensões disponíveis.');
+            
+            showStatus('URL nível nacional gerado com sucesso!', 'success');
+        }
+        
         function generateURLs() {
             if (!selectedIndicator) {
                 showStatus('Por favor, selecione um indicador primeiro', 'error');
@@ -1154,16 +1275,15 @@
             
             // URL 2: Último período (simples)
             const url2 = generateURL(baseURL, varcd, 'last_period', lang);
-            const lastPeriodCode = getPeriodCode(selectedIndicator.UltimoPeriodo);
-            const lastPeriodDesc = lastPeriodCode ? `código: ${lastPeriodCode}` : 'todos os períodos disponíveis';
             addURLOutput(urlsOutput, '2. Último período disponível', url2, 'bi-calendar-event',
-                `Estratégia conservadora: apenas o último período (${selectedIndicator.UltimoPeriodo} - ${lastPeriodDesc}) sem outras dimensões.`);
+                `Estratégia conservadora: apenas o último período (${selectedIndicator.UltimoPeriodo}) sem outras dimensões. Retorna dados apenas para o período mais recente.`);
             
             // URL 3: Períodos específicos
             const url3 = generateURL(baseURL, varcd, 'specific_periods', lang);
             const allPeriodCodes = getAllPeriodCodes();
-            addURLOutput(urlsOutput, '3. Períodos específicos', url3, 'bi-calendar-range',
-                `Estratégia temporal: todos os períodos disponíveis (${allPeriodCodes.length} códigos: ${allPeriodCodes.slice(0, 5).join(', ')}${allPeriodCodes.length > 5 ? '...' : ''}) sem dimensões geográficas.`);
+            const lastThree = allPeriodCodes.slice(-3);
+            addURLOutput(urlsOutput, '3. Últimos 3 períodos', url3, 'bi-calendar-range',
+                `Estratégia temporal: últimos 3 períodos disponíveis (${lastThree.join(', ')}) sem outras dimensões. Útil para análise de tendências recentes.`);
             
             // URL 4: Por nível geográfico
             const url4 = generateURL(baseURL, varcd, 'geographic_level', lang);
@@ -1173,16 +1293,21 @@
             // URL 5: Dimensões personalizadas
             const url5 = generateURL(baseURL, varcd, 'custom', lang);
             addURLOutput(urlsOutput, '5. Dimensões personalizadas', url5, 'bi-sliders',
-                'Estratégia personalizada: baseada na sua configuração das dimensões. Mais conservadora para evitar erros.');
+                'Estratégia personalizada: baseada na sua configuração das dimensões. Apenas Dim1 usa "T" para todos; outras dimensões usam valores específicos ou são omitidas.');
             
             // URL 6: Dados por lotes (simples)
             const url6 = generateURL(baseURL, varcd, 'batches', lang);
             addURLOutput(urlsOutput, '6. Dados por lotes', url6, 'bi-collection',
                 'Estratégia minimalista: apenas Dim1=T para obter dados em lotes menores sem complexidade.');
             
-            // URL 7: Teste de conectividade
-            const url7 = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
-            addURLOutput(urlsOutput, '7. Teste básico', url7, 'bi-wifi',
+            // URL 7: Todas as dimensões em nível 1 (nacional)
+            const url7 = generateURL(baseURL, varcd, 'all_level1', lang);
+            addURLOutput(urlsOutput, '7. Todas as dimensões - Nível Nacional', url7, 'bi-globe',
+                'Estratégia nacional: todas as dimensões em nível 1 (nacional) usando pindicaNoLevel.jsp. Ideal para dados agregados por país.');
+            
+            // URL 8: Teste de conectividade
+            const url8 = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
+            addURLOutput(urlsOutput, '8. Teste básico', url8, 'bi-wifi',
                 'Estratégia de teste: URL mínimo apenas com varcd e lang para testar conectividade com a API.');
             
             showStatus(`${generatedURLs.length} URLs gerados com sucesso!`, 'success');
@@ -1200,25 +1325,24 @@
                     
                 case 'last_period':
                     // Estratégia 2: Apenas último período, sem outras dimensões
-                    const lastPeriodCode = getPeriodCode(selectedIndicator.UltimoPeriodo);
-                    if (lastPeriodCode) {
-                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${lastPeriodCode}&lang=${lang}`;
+                    const allPeriodCodesForLast = getAllPeriodCodes();
+                    if (allPeriodCodesForLast.length > 0) {
+                        // Usar apenas o último código de período disponível
+                        const lastCode = allPeriodCodesForLast[allPeriodCodesForLast.length - 1];
+                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${lastCode}&lang=${lang}`;
                     } else {
-                        // Se não encontrar o código específico, usar todos os períodos disponíveis
-                        const allPeriodCodes = getAllPeriodCodes();
-                        if (allPeriodCodes.length > 0) {
-                            url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${allPeriodCodes.join(',')}&lang=${lang}`;
-                        } else {
-                            url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
-                        }
+                        // Fallback: sem períodos específicos
+                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
                     }
                     break;
                     
                 case 'specific_periods':
-                    // Estratégia 3: Períodos específicos, sem outras dimensões
+                    // Estratégia 3: Períodos específicos (últimos 3 períodos), sem outras dimensões
                     const allPeriodCodes = getAllPeriodCodes();
                     if (allPeriodCodes.length > 0) {
-                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${allPeriodCodes.join(',')}&lang=${lang}`;
+                        // Usar apenas os últimos 3 períodos disponíveis
+                        const lastThreePeriods = allPeriodCodes.slice(-3);
+                        url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=${lastThreePeriods.join(',')}&lang=${lang}`;
                     } else {
                         url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&lang=${lang}`;
                     }
@@ -1242,6 +1366,34 @@
                 case 'batches':
                     // Estratégia 6: Apenas período, mais simples possível
                     url = `${baseURL}pindica.jsp?op=2&varcd=${varcd}&Dim1=T&lang=${lang}`;
+                    break;
+                    
+                case 'all_level1':
+                    // Estratégia 7: Todas as dimensões em nível 1 (nacional)
+                    url = `${baseURL}pindicaNoLevel.jsp?op=2&varcd=${varcd}`;
+                    
+                    // Usar análise exaustiva para identificar todas as dimensões
+                    const allDimensions = analyzeIndicatorDimensions(selectedIndicator);
+                    
+                    // Adicionar todas as dimensões identificadas
+                    allDimensions.forEach(dimension => {
+                        const dimNum = dimension.dim_num;
+                        
+                        if (dimNum === '1') {
+                            // Dim1 (período): usar T para todos os períodos
+                            url += `&Dim${dimNum}=T`;
+                        } else {
+                            // Dim2, Dim3, etc.: usar lvl@1 para nível nacional
+                            url += `&DIM${dimNum}=lvl@1`;
+                        }
+                    });
+                    
+                    // Se não há dimensões identificadas, usar pelo menos Dim1=T
+                    if (allDimensions.length === 0) {
+                        url += `&Dim1=T`;
+                    }
+                    
+                    url += `&lang=${lang}`;
                     break;
                     
                 default:
@@ -1274,12 +1426,14 @@
                 
                 switch (typeSelect.value) {
                     case 'all':
-                        // Para períodos (Dim1): sempre usar T
-                        // Para outras dimensões: usar T apenas se for período
+                        // IMPORTANTE: Apenas Dim1 (período) aceita T na API INE
+                        // Para outras dimensões: omitir o parâmetro (obtém todos os valores por defeito)
                         if (dimNum === '1') {
                             url += `&Dim${dimNum}=T`;
                             hasValidDimension = true;
                         }
+                        // Para outras dimensões (Dim2, Dim3, etc): não adicionar nada
+                        // A API retorna todos os valores se o parâmetro for omitido
                         break;
                         
                     case 'specific':
@@ -1371,8 +1525,13 @@
         function addURLOutput(container, title, url, icon, description) {
             generatedURLs.push({ title, url });
             
+            const urlIndex = generatedURLs.length - 1;
             const urlDiv = document.createElement('div');
             urlDiv.className = 'mb-4 fade-in';
+            urlDiv.id = `url-container-${urlIndex}`;
+            
+            // Escapar aspas no título para uso em atributos
+            const escapedTitle = title.replace(/'/g, "\\'");
             
             urlDiv.innerHTML = `
                 <div class="card border-0 shadow-sm">
@@ -1395,6 +1554,9 @@
                                     </a>
                                 </div>
                                 <div class="d-flex gap-2">
+                                    <button class="preview-btn btn btn-sm" onclick="togglePreview(${urlIndex}, '${url.replace(/'/g, "\\'")}', '${escapedTitle}')" title="Pré-visualizar JSON">
+                                        <i class="bi bi-eye me-1"></i>Pré-visualizar
+                                    </button>
                                     <button class="copy-btn btn btn-sm" onclick="copyToClipboard('${url}')" title="Copiar URL para a área de transferência">
                                         <i class="bi bi-clipboard me-1"></i>Copiar
                                     </button>
@@ -1404,6 +1566,7 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="preview-${urlIndex}" class="preview-container" style="display: none;"></div>
                     </div>
                 </div>
             `;
@@ -1411,10 +1574,261 @@
             container.appendChild(urlDiv);
         }
         
+        async function togglePreview(urlIndex, url, title) {
+            const previewContainer = document.getElementById(`preview-${urlIndex}`);
+            const previewBtn = event.target.closest('button');
+            
+            // Se já está visível, esconder
+            if (previewContainer.style.display !== 'none') {
+                previewContainer.style.display = 'none';
+                previewBtn.innerHTML = '<i class="bi bi-eye me-1"></i>Pré-visualizar';
+                return;
+            }
+            
+            // Mostrar loading
+            previewContainer.style.display = 'block';
+            previewContainer.innerHTML = `
+                <div class="json-preview-header">
+                    <span><i class="bi bi-file-code me-2"></i>Pré-visualização JSON</span>
+                    <button class="btn btn-sm btn-light" onclick="copyJsonToClipboard(${urlIndex})" title="Copiar JSON">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <div class="json-preview">
+                    <div class="json-preview-loading">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        A carregar dados da API...
+                    </div>
+                </div>
+            `;
+            
+            previewBtn.innerHTML = '<i class="bi bi-eye-slash me-1"></i>Fechar';
+            
+            try {
+                // Tentar múltiplos proxies CORS para contornar restrições
+                const proxies = [
+                    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                    `https://cors-anywhere.herokuapp.com/${url}`,
+                    `https://thingproxy.freeboard.io/fetch/${url}`
+                ];
+                
+                let jsonData = null;
+                let lastError = null;
+                
+                for (const proxyUrl of proxies) {
+                    try {
+                        console.log(`Tentando proxy: ${proxyUrl}`);
+                        const response = await fetch(proxyUrl);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const proxyData = await response.json();
+                        
+                        // Verificar se é resposta do allorigins
+                        if (proxyData.contents) {
+                            if (proxyData.status.http_code !== 200) {
+                                throw new Error(`API Error: ${proxyData.status.http_code}`);
+                            }
+                            jsonData = JSON.parse(proxyData.contents);
+                        } else {
+                            // Resposta direta de outros proxies
+                            jsonData = proxyData;
+                        }
+                        
+                        console.log('Proxy funcionou:', proxyUrl);
+                        break; // Sucesso, sair do loop
+                        
+                    } catch (proxyError) {
+                        console.log(`Proxy falhou: ${proxyUrl}`, proxyError);
+                        lastError = proxyError;
+                        continue; // Tentar próximo proxy
+                    }
+                }
+                
+                if (!jsonData) {
+                    throw lastError || new Error('Todos os proxies falharam');
+                }
+                
+                // Armazenar JSON para cópia posterior
+                window[`jsonData_${urlIndex}`] = jsonData;
+                
+                // Formatar e exibir JSON com syntax highlighting
+                const formattedJson = syntaxHighlight(JSON.stringify(jsonData, null, 2));
+                
+                previewContainer.innerHTML = `
+                    <div class="json-preview-header">
+                        <span>
+                            <i class="bi bi-file-code me-2"></i>Pré-visualização JSON
+                            <span class="badge bg-success ms-2">
+                                <i class="bi bi-check-circle me-1"></i>Carregado
+                            </span>
+                        </span>
+                        <div>
+                            <button class="btn btn-sm btn-light me-2" onclick="downloadJson(${urlIndex}, '${title}')" title="Descarregar JSON">
+                                <i class="bi bi-download me-1"></i>Descarregar
+                            </button>
+                            <button class="btn btn-sm btn-light" onclick="copyJsonToClipboard(${urlIndex})" title="Copiar JSON">
+                                <i class="bi bi-clipboard me-1"></i>Copiar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="json-preview">
+                        <pre>${formattedJson}</pre>
+                    </div>
+                `;
+                
+                showStatus('JSON carregado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao carregar JSON:', error);
+                
+                // Tentar método alternativo com iframe se o proxy falhar
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    previewContainer.innerHTML = `
+                        <div class="json-preview-header">
+                            <span>
+                                <i class="bi bi-file-code me-2"></i>Pré-visualização JSON
+                                <span class="badge bg-warning ms-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>CORS Bloqueado
+                                </span>
+                            </span>
+                        </div>
+                        <div class="json-preview-error">
+                            <h6><i class="bi bi-shield-exclamation me-2"></i>Bloqueio CORS Detectado</h6>
+                            <p class="mb-3">A API do INE bloqueia requisições diretas do navegador por questões de segurança.</p>
+                            
+                            <div class="alert alert-info border-0 mb-3">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-lightbulb me-2"></i>Soluções Alternativas:
+                                </h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary btn-sm" onclick="openInNewTab('${url}')">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>Abrir numa Nova Aba
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="copyToClipboard('${url}')">
+                                        <i class="bi bi-clipboard me-2"></i>Copiar URL para Testar Manualmente
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning border-0 mb-0">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-info-circle me-2"></i>Como Testar:
+                                </h6>
+                                <ol class="mb-0 small">
+                                    <li>Clique em "Abrir numa Nova Aba" para ver o JSON</li>
+                                    <li>Ou copie o URL e cole diretamente no navegador</li>
+                                    <li>O JSON será exibido diretamente na página da API</li>
+                                    <li>Pode copiar o conteúdo JSON da página</li>
+                                </ol>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Outros erros
+                    previewContainer.innerHTML = `
+                        <div class="json-preview-header">
+                            <span>
+                                <i class="bi bi-file-code me-2"></i>Pré-visualização JSON
+                                <span class="badge bg-danger ms-2">
+                                    <i class="bi bi-x-circle me-1"></i>Erro
+                                </span>
+                            </span>
+                        </div>
+                        <div class="json-preview-error">
+                            <h6><i class="bi bi-exclamation-triangle-fill me-2"></i>Erro ao carregar JSON</h6>
+                            <p class="mb-2"><strong>Mensagem:</strong> ${error.message}</p>
+                            <p class="mb-0"><strong>URL:</strong> ${url}</p>
+                            <hr>
+                            <small>
+                                <strong>Possíveis causas:</strong>
+                                <ul class="mb-0">
+                                    <li>A API pode não suportar a combinação de parâmetros escolhida</li>
+                                    <li>O indicador pode não ter dados para as dimensões selecionadas</li>
+                                    <li>Problemas de CORS ou conectividade</li>
+                                    <li>Parâmetros inválidos (ex: Dim2=T não é suportado)</li>
+                                </ul>
+                            </small>
+                        </div>
+                    `;
+                }
+                
+                showStatus('Erro ao carregar JSON: ' + error.message, 'error');
+            }
+        }
+        
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        
+        function copyJsonToClipboard(urlIndex) {
+            const jsonData = window[`jsonData_${urlIndex}`];
+            if (!jsonData) {
+                showStatus('Nenhum JSON carregado para copiar', 'error');
+                return;
+            }
+            
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            navigator.clipboard.writeText(jsonString).then(() => {
+                showStatus('JSON copiado para a área de transferência!', 'success');
+            }).catch(err => {
+                console.error('Erro ao copiar JSON:', err);
+                showStatus('Erro ao copiar JSON', 'error');
+            });
+        }
+        
+        function downloadJson(urlIndex, title) {
+            const jsonData = window[`jsonData_${urlIndex}`];
+            if (!jsonData) {
+                showStatus('Nenhum JSON carregado para descarregar', 'error');
+                return;
+            }
+            
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // Limpar título para usar como nome de ficheiro
+            const fileName = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            a.download = `${fileName}_${new Date().toISOString().split('T')[0]}.json`;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showStatus('JSON descarregado com sucesso!', 'success');
+        }
+        
         function testURL(url) {
             // Abrir o URL numa nova aba para visualizar o JSON
             window.open(url, '_blank');
             showStatus('URL aberto numa nova aba para visualização do JSON', 'success');
+        }
+        
+        function openInNewTab(url) {
+            // Função específica para abrir URLs quando há problemas CORS
+            window.open(url, '_blank');
+            showStatus('URL aberto numa nova aba. O JSON será exibido diretamente na página da API.', 'success');
         }
         
         function copyToClipboard(text) {
